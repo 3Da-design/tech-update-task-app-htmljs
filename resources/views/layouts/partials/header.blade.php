@@ -12,10 +12,7 @@
 
     <nav class="app-header__nav">
       @auth
-        <a
-          href="{{ route('tasks.index') }}"
-          @class(['app-nav-link', 'app-nav-link--active' => request()->routeIs('tasks.*')])
-        >
+        <a href="/app/tasks.html" class="app-nav-link">
           タスク一覧
         </a>
         <a

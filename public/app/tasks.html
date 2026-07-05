@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>タスク管理</title>
+  <link rel="preconnect" href="https://fonts.bunny.net">
+  <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/app/style.css">
+</head>
+<body>
+  <!-- ─── Header ──────────────────────────────────── -->
+  <header class="app-header">
+    <div class="app-header__inner">
+      <div class="app-header__brand">タスク管理</div>
+      <nav class="app-header__nav">
+        <a href="/app/tasks.html" class="app-nav-link app-nav-link--active">タスク一覧</a>
+        <a href="/profile" class="app-nav-link">プロフィール</a>
+        <button type="button" id="logout-btn" class="app-header__logout">ログアウト</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ─── Main ────────────────────────────────────── -->
+  <main class="app-main">
+    <!-- Flash -->
+    <div id="flash" class="app-flash" hidden></div>
+
+    <!-- Page heading -->
+    <div class="app-page-heading">
+      <h1>タスク一覧</h1>
+      <button type="button" id="create-btn" class="app-btn--primary">新規作成</button>
+    </div>
+
+    <!-- Filter -->
+    <div class="app-card">
+      <form id="filter-form" class="filter-form">
+        <div class="app-form-field">
+          <label for="filter-title">タイトル</label>
+          <input type="search" id="filter-title" name="title" class="app-input">
+        </div>
+        <div class="app-form-field">
+          <label for="filter-status">ステータス</label>
+          <select id="filter-status" name="status" class="app-input">
+            <option value="">すべて</option>
+            <option value="todo">todo</option>
+            <option value="in_progress">in_progress</option>
+            <option value="done">done</option>
+          </select>
+        </div>
+        <div class="app-form-field">
+          <label>期限並び替え</label>
+          <div class="app-radio-group">
+            <label class="app-radio-label">
+              <input type="radio" name="due_date_sort" value="asc" checked> 昇順
+            </label>
+            <label class="app-radio-label">
+              <input type="radio" name="due_date_sort" value="desc"> 降順
+            </label>
+          </div>
+        </div>
+        <button type="submit" class="app-btn--primary">適用</button>
+      </form>
+    </div>
+
+    <!-- Task table -->
+    <div class="app-card app-card--table">
+      <table class="app-table">
+        <thead>
+          <tr>
+            <th>タイトル</th>
+            <th>ステータス</th>
+            <th>期限</th>
+            <th class="text-right">操作</th>
+          </tr>
+        </thead>
+        <tbody id="task-list">
+          <tr><td colspan="4" class="empty-cell">読み込み中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- ─── Modal (create / edit) ───────────────────── -->
+  <div id="modal-overlay" class="app-modal-overlay" hidden>
+    <div class="app-modal">
+      <h2 id="modal-title">タスク作成</h2>
+      <form id="task-form">
+        <input type="hidden" id="task-id">
+        <div class="app-form-field">
+          <label for="task-title-input">タイトル <span class="required">*</span></label>
+          <input type="text" id="task-title-input" required maxlength="255" class="app-input">
+        </div>
+        <div class="app-form-field" style="margin-top:0.75rem">
+          <label for="task-description">説明</label>
+          <textarea id="task-description" class="app-input"></textarea>
+        </div>
+        <div class="app-form-field" style="margin-top:0.75rem">
+          <label for="task-status">ステータス <span class="required">*</span></label>
+          <select id="task-status" required class="app-input">
+            <option value="todo">todo</option>
+            <option value="in_progress">in_progress</option>
+            <option value="done">done</option>
+          </select>
+        </div>
+        <div class="app-form-field" style="margin-top:0.75rem">
+          <label for="task-due-date">期限</label>
+          <input type="date" id="task-due-date" class="app-input">
+        </div>
+        <div id="form-errors" class="app-form-errors" hidden></div>
+        <div class="app-form-actions">
+          <button type="submit" class="app-btn--primary">保存</button>
+          <button type="button" id="cancel-btn" class="app-btn--secondary">キャンセル</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/app/tasks.js"></script>
+</body>
+</html>

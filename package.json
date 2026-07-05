@@ -5,8 +5,8 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "lint": "eslint resources/js",
-    "lint:fix": "eslint resources/js --fix",
+    "lint": "eslint resources/js public/app",
+    "lint:fix": "eslint resources/js public/app --fix",
     "test:api": "newman run postman/Task-API.postman_collection.json -e postman/local.postman_environment.json --folder Health --folder Auth --folder \"Tasks API\"",
     "test:api:docker": "newman run postman/Task-API.postman_collection.json -e postman/local.postman_environment.json --env-var baseUrl=http://nginx --folder Health --folder Auth --folder \"Tasks API\""
   },

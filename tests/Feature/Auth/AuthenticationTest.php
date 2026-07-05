@@ -28,7 +28,7 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('tasks.index', absolute: false));
+        $response->assertRedirect('/app/tasks.html');
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void
