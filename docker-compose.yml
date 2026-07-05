@@ -1,16 +1,20 @@
+# htmljs 専用スタック（S1 — 他構成と同時起動可能）
+# ポート既定: Web 8002 / DB 5435 / Vite 5176（.env の APP_HTTP_PORT 等で上書き可）
+name: tech-update-task-app-htmljs
+
 services:
   app:
     # docker/php/Dockerfile を変更したら再ビルド: docker compose build app && docker compose up -d
     build:
       context: .
       dockerfile: docker/php/Dockerfile
-    container_name: tech-update-task-app-php
+    container_name: tech-update-task-app-htmljs-php
     restart: unless-stopped
     working_dir: /var/www/html
     environment:
       # .env がホスト用でも、コンテナ内は compose の値が使われる（php-fpm clear_env=no）
-      APP_URL: http://localhost:8000
-      ASSET_URL: http://localhost:8000
+      APP_URL: http://localhost:${APP_HTTP_PORT:-8002}
+      ASSET_URL: http://localhost:${APP_HTTP_PORT:-8002}
       DB_CONNECTION: pgsql
       DB_HOST: postgres
       DB_PORT: "5432"
@@ -30,23 +34,24 @@ services:
   # 開発: docker compose --profile node run --rm --service-ports node npm run dev
   node:
     image: node:22-alpine
-    container_name: tech-update-task-app-node
+    container_name: tech-update-task-app-htmljs-node
     working_dir: /var/www/html
     volumes:
       - .:/var/www/html
+      - node_modules_htmljs:/var/www/html/node_modules
     networks:
       - app-network
     ports:
-      - "5173:5173"
+      - "${NODE_DEV_PORT:-5176}:5173"
     profiles:
       - node
 
   nginx:
     image: nginx:1.27-alpine
-    container_name: tech-update-task-app-nginx
+    container_name: tech-update-task-app-htmljs-nginx
     restart: unless-stopped
     ports:
-      - "8000:80"
+      - "${APP_HTTP_PORT:-8002}:80"
     volumes:
       - .:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
@@ -57,16 +62,16 @@ services:
 
   postgres:
     image: postgres:16-alpine
-    container_name: tech-update-task-app-postgres
+    container_name: tech-update-task-app-htmljs-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: laravel
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: secret
     ports:
-      - "5432:5432"
+      - "${DB_HOST_PORT:-5435}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_htmljs:/var/lib/postgresql/data
     networks:
       - app-network
     healthcheck:
@@ -81,4 +86,5 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_data:
+  postgres_data_htmljs:
+  node_modules_htmljs:

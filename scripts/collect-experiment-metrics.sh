@@ -5,6 +5,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+# shellcheck source=lib/app-base-url.sh
+source "${ROOT}/scripts/lib/app-base-url.sh"
+
 PHASE="baseline"
 RUN_ID=""
 DIFF_REF=""
@@ -173,11 +176,11 @@ else
 fi
 
 echo ">> Newman"
-if ! curl -sf "http://localhost:8000/up" > /dev/null 2>&1; then
+if ! curl -sf "${APP_BASE_URL}/up" > /dev/null 2>&1; then
   echo "Starting docker compose..."
   docker compose up -d
   for _ in $(seq 1 30); do
-    if curl -sf "http://localhost:8000/up" > /dev/null 2>&1; then
+    if curl -sf "${APP_BASE_URL}/up" > /dev/null 2>&1; then
       break
     fi
     sleep 1

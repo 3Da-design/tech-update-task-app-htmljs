@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
-# API の疎通とバリデーション（不正 status → 422）を確認する。BASE は省略時 http://localhost:8000
+# API の疎通とバリデーション（不正 status → 422）を確認する。BASE は省略時 .env の APP_HTTP_PORT から決定
 set -euo pipefail
 
-BASE="${1:-http://localhost:8000}"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source=lib/app-base-url.sh
+source "${ROOT}/scripts/lib/app-base-url.sh"
+
+BASE="${1:-${APP_BASE_URL}}"
 
 echo "GET ${BASE}/up"
 up_code=$(curl -s -o /dev/null -w "%{http_code}" "${BASE}/up")

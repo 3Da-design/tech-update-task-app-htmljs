@@ -5,6 +5,13 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+# shellcheck source=lib/app-base-url.sh
+source "${ROOT}/scripts/lib/app-base-url.sh"
+# shellcheck source=lib/ensure-docker-stack.sh
+source "${ROOT}/scripts/lib/ensure-docker-stack.sh"
+
+ensure_docker_stack_running "${ROOT}" "${APP_BASE_URL}"
+
 echo "== PHPStan (実行前・型・構造) =="
 docker compose exec -T app composer phpstan
 
@@ -26,19 +33,9 @@ docker compose exec -T app composer test
 
 echo ""
 echo "== Newman (実行後・API・セッション) =="
-if ! curl -sf "http://localhost:8000/up" > /dev/null 2>&1; then
-  echo "http://localhost:8000 に接続できないため docker compose up -d を実行します"
-  docker compose up -d
-  for _ in $(seq 1 30); do
-    if curl -sf "http://localhost:8000/up" > /dev/null 2>&1; then
-      break
-    fi
-    sleep 1
-  done
-  if ! curl -sf "http://localhost:8000/up" > /dev/null 2>&1; then
-    echo "ERROR: http://localhost:8000/up に接続できません。docker compose ps で状態を確認してください。"
-    exit 1
-  fi
+if ! curl -sf "${APP_BASE_URL}/up" > /dev/null 2>&1; then
+  echo "WARN: ${APP_BASE_URL}/up に接続できないためスタックを再起動します"
+  ensure_docker_stack_running "${ROOT}" "${APP_BASE_URL}"
 fi
 
 echo "DB migrate --seed（test@example.com / password）"
