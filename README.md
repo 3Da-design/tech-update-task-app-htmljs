@@ -1,9 +1,9 @@
-# tech-update-task-app
+# tech-update-task-app-htmljs
 
-技術更新時の影響を定量評価するための **改良構成（良い例）** 実験台です。  
-同一機能のタスク管理アプリを、Controller / Service / Repository 分離と CI/CD で守り、更新シナリオごとに従来構成（別リポジトリ）と比較します。
+技術更新に強い Web アプリ基盤を比較する研究の **スタック S1 — HTML/JS + Laravel API** 実験台です。
+improved 設計（Controller / Service / Repository 分離）を維持したまま、タスク UI を Blade から **素の HTML + JavaScript（fetch）** に置き換え、Blade 版（S0）と技術更新時の修正のしやすさを比較します。
 
-[![CI](https://github.com/3Da-design/tech-update-task-app/actions/workflows/ci.yml/badge.svg)](https://github.com/3Da-design/tech-update-task-app/actions/workflows/ci.yml)
+[![CI](https://github.com/3Da-design/tech-update-task-app-htmljs/actions/workflows/ci.yml/badge.svg)](https://github.com/3Da-design/tech-update-task-app-htmljs/actions/workflows/ci.yml)
 
 ---
 
@@ -25,45 +25,48 @@
 
 | 項目 | 内容 |
 |------|------|
-| **ゴール** | 設計（モジュール化 + CI/CD）が技術更新時の影響をどれだけ抑えられるかを定量的に示す |
-| **本リポジトリ** | 改良構成（Controller / Service / Repository + Interface） |
+| **章** | 第2章 — スタック比較 |
+| **スタック ID** | **S1** — HTML/JS + Laravel API |
+| **ゴール** | improved 設計を維持したまま、フロント方式（Blade → HTML/JS）の違いが技術更新時の影響をどう変えるかを定量的に示す |
+| **本リポジトリ** | 素の HTML + JavaScript（fetch）フロント + Laravel REST API（improved 維持） |
 | **ベースライン** | **`main`** および **`experiment-baseline-v1` タグ**。タスク属性は **`title` / `description` / `due_date` / `status` の 4 項目のみ**。`priority` 追加・status integer 化などの仕様変更は **`exp/*` ブランチ** で実施 |
-| **対照** | 従来構成リポジトリ（`tech-update-task-app-legacy`、Fat Controller・Service/Repository なし） |
-| **比較条件** | 同一アプリ（タスク管理）、同一スタック（Laravel）、同一 CI ワークフロー・同一 Feature テスト |
-| **評価スコープ** | **アプリ全体**（認証・プロフィール・タスク・CI 全ジョブ） |
+| **対照** | S0 Blade（`tech-update-task-app`、improved・同一 API） |
+| **fork 元** | `tech-update-task-app`（improved / S0 Blade） |
+| **比較条件** | 同一アプリ（タスク管理）、同一 API 設計、同一 Feature テスト、フロント方式のみ差し替え |
 
-詳細は [docs/EXPERIMENT.md](docs/EXPERIMENT.md) を参照してください。
+詳細は [../EXPERIMENT-STACK.md](../EXPERIMENT-STACK.md) と [docs/STACK-PROFILE.md](docs/STACK-PROFILE.md) を参照してください。
 
-> **フロントエンド:** 本リポジトリは Blade + Tailwind CSS + Vite + Alpine.js。React 等への移行比較は主シナリオ外の **拡張比較**（[EXPERIMENT.md — フロントエンドスタック](docs/EXPERIMENT.md#フロントエンドスタック拡張比較)）として位置づける。
+> **第1章 legacy は扱いません。** Fat Controller 版（`tech-update-task-app-legacy`）は参照のみです。
 
 ---
 
 ## アーキテクチャ
 
-### タスク領域（改良構成の核）
+### タスク領域（フロント分離 + improved 維持）
 
 ```text
-HTTP (Web / API)
+Browser (HTML/JS — public/app/)
+    │ fetch / credentials: 'include'
+    │ X-XSRF-TOKEN ヘッダー（CSRF 保護）
+    ▼
+API\TaskController          … HTTP の受け渡しのみ
     │
     ▼
-TaskController (Web / API)   … HTTP の受け渡しのみ
-    │
-    ▼
-TaskService                  … 認可・入力正規化・ユースケース
+TaskService                … 認可・入力正規化・ユースケース
     │
     ▼
 TaskRepositoryInterface
     │
     ▼
-TaskRepository               … Eloquent による永続化
+TaskRepository             … Eloquent による永続化
     │
     ▼
 Task (Model)
 ```
 
-| レイヤ | クラス |
-|--------|--------|
-| Web | `App\Http\Controllers\Web\TaskController` |
+| レイヤ | クラス／ファイル |
+|--------|------------------|
+| フロント | `public/app/tasks.html` / `tasks.js` / `style.css`（nginx 直配信） |
 | API | `App\Http\Controllers\API\TaskController` |
 | Service | `App\Services\TaskService` |
 | Repository | `App\Repositories\TaskRepository` |
@@ -71,23 +74,42 @@ Task (Model)
 | DI | `App\Providers\RepositoryServiceProvider` |
 | 入出力 | `StoreTaskRequest`, `UpdateTaskRequest`, `TaskResource` |
 
-Web と API は **同じ `TaskService`** を共有するため、API 仕様変更時の修正を Service / Repository 周辺に集約しやすい構成です。
+### S0 Blade との主な違い
+
+| 観点 | S0 Blade | S1 HTML/JS（本リポジトリ） |
+|------|----------|----------------------------|
+| タスク UI | Blade テンプレート（サーバサイド描画） | 静的 HTML + fetch（クライアントサイド描画） |
+| `Web\TaskController` | 有（Blade 返却・リダイレクト） | **削除**（API 一本化） |
+| ルーティング | Web + API 二系統 | API のみ（Web は認証・プロフィールのみ） |
+| CSRF | Blade の `@csrf` | `XSRF-TOKEN` Cookie → `X-XSRF-TOKEN` ヘッダー |
+| ログイン画面 | Breeze Blade | 同左（Breeze Blade を継続利用） |
 
 ### 認証・プロフィール
 
-Laravel Breeze 標準（Controller から User Model を直接操作）。  
-比較実験の「悪い例」は **別リポジトリのタスク領域** で再現し、Laravel / テストツール / JS 更新の影響は全体メトリクスに含めます。
+Laravel Breeze 標準（セッション Cookie）。ログイン / 登録 / プロフィール画面は Blade のまま維持し、タスク UI のみ静的フロントに一本化しています。
+
+### API エンドポイント
+
+| メソッド | パス | 説明 |
+|----------|------|------|
+| GET | `/api/tasks` | 一覧（フィルタ・ソート対応） |
+| POST | `/api/tasks` | 作成（201） |
+| PUT | `/api/tasks/{id}` | 更新 |
+| DELETE | `/api/tasks/{id}` | 削除（204） |
 
 ### ディレクトリ（タスク関連）
 
 ```text
+public/app/                    # 静的フロント（nginx 直配信）
+├── tasks.html                 # タスク一覧・CRUD の単一ページ
+├── tasks.js                   # API 呼び出し・DOM 操作
+└── style.css                  # スタイルシート
+
 app/
 ├── Http/
-│   ├── Controllers/
-│   │   ├── API/TaskController.php
-│   │   └── Web/TaskController.php
-│   ├── Requests/          # バリデーション
-│   └── Resources/         # API JSON
+│   ├── Controllers/API/TaskController.php
+│   ├── Requests/              # バリデーション
+│   └── Resources/             # API JSON
 ├── Services/TaskService.php
 └── Repositories/
     ├── Contracts/TaskRepositoryInterface.php
@@ -101,13 +123,14 @@ app/
 | 区分 | 技術 |
 |------|------|
 | バックエンド | Laravel 13、PHP 8.4 |
-| 認証 | Laravel Breeze（セッション） |
+| フロント（タスク） | 素の HTML + JavaScript（fetch）。React / Vue 等の FW は不使用 |
+| フロント（認証） | Blade（Breeze ログイン / プロフィール） |
+| 認証 | Laravel Breeze（セッション Cookie）、CSRF は `X-XSRF-TOKEN` |
 | DB | PostgreSQL（Docker Compose） |
-| フロント | Blade、Tailwind CSS、Vite、Alpine.js |
 | 品質 | PHPStan (Larastan)、Laravel Pint、ESLint |
 | テスト | PHPUnit、Postman / Newman |
-| CI | GitHub Actions（4 ジョブ並列） |
-| 開発環境 | Docker Compose（`http://localhost:8000`） |
+| CI | GitHub Actions |
+| 開発環境 | Docker Compose（Web `http://localhost:8002` / DB `5435`） |
 
 ---
 
@@ -116,8 +139,8 @@ app/
 ### 前提
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) など Compose v2 対応環境
-- 開発フローは **Docker Compose のみ**（ホストで `php artisan serve` は使わない。ポート `8000` は nginx が使用）
-- **フロント（npm）は Docker の `node` サービスのみ**（ホストで `npm install` / `npm ci` しない。`node_modules` の混在で `ENOTEMPTY` などが起きる）
+- 開発フローは **Docker Compose のみ**（ホストで `php artisan serve` は使わない。Web ポートは `8002`）
+- **フロント（npm）は Docker の `node` サービスのみ**（ホストで `npm install` / `npm ci` しない）
 
 ### 初回セットアップ
 
@@ -134,7 +157,8 @@ docker compose exec app php artisan migrate --seed
 composer npm:docker-build
 ```
 
-ブラウザで `http://localhost:8000` を開きます。シードユーザー: `test@example.com` / `password`
+ブラウザで `http://localhost:8002` を開くと `/app/tasks.html` にリダイレクトされます。
+未認証の場合はログイン画面へ遷移します。シードユーザー: `test@example.com` / `password`
 
 ### よく使うコマンド
 
@@ -151,7 +175,7 @@ chmod +x scripts/curl-api-smoke.sh
 ./scripts/curl-api-smoke.sh
 ```
 
-`http_code` が `000` のときは Docker 未起動・URL 誤り・ポート競合を確認してください（README 旧版の curl 例も有効です）。
+`http_code` が `000` のときは Docker 未起動・URL 誤り・ポート競合を確認してください。
 
 ---
 
@@ -163,17 +187,16 @@ chmod +x scripts/curl-api-smoke.sh
 ./scripts/check-quality.sh
 ```
 
-実行内容: PHPStan → ESLint → Vite build → PHPUnit → Newman
+実行内容: PHPStan → npm ci → ESLint → Vite build → PHPUnit → Newman
 
 ### フロントエンド（Docker のみ）
 
 ホストに Node が入っていても、**依存のインストール・ビルドはコンテナ内だけ**で行います。
 
 ```bash
-composer npm:docker-ci      # コンテナ内 npm ci（node_modules は npm ci がクリーンアップ）
+composer npm:docker-ci      # コンテナ内 npm ci
 composer npm:docker-build   # 上記 + npm run build
 docker compose --profile node run --rm node npm run lint
-docker compose --profile node run --rm --service-ports node npm run dev   # Vite 開発サーバー
 ```
 
 ### 個別（PHP / API）
@@ -181,17 +204,18 @@ docker compose --profile node run --rm --service-ports node npm run dev   # Vite
 ```bash
 docker compose exec app composer phpstan
 docker compose exec app composer test
-docker compose --profile node run --rm node npm run test:api
+npm run test:api:docker
 ```
 
-### GitHub Actions（CI）
+### 主要テスト
 
-| ジョブ | 内容 |
-|--------|------|
-| `php-tests` | PHPUnit（事前に Vite build） |
-| `php-quality` | Pint + PHPStan |
-| `frontend` | ESLint + Vite build |
-| `api-tests` | Newman（Postman コレクション） |
+| テスト | ファイル | 内容 |
+|--------|----------|------|
+| API CRUD | `tests/Feature/TaskApiTest.php` | タスク作成・更新・削除・一覧 |
+| API フィルタ | `tests/Feature/TaskListFilterTest.php` | 一覧のフィルタ・ソート |
+| Web リダイレクト | `tests/Feature/TaskWebTest.php` | `/` → `/app/tasks.html` リダイレクト |
+| 認証 | `tests/Feature/Auth/*.php` | Breeze 標準 |
+| Newman | `postman/Task-API.postman_collection.json` | API アサーション |
 
 ---
 
@@ -199,12 +223,12 @@ docker compose --profile node run --rm node npm run test:api
 
 ### 1. ベースラインの確立
 
-改良構成が CI 緑の状態で:
+CI 緑の状態で:
 
 ```bash
 ./scripts/check-quality.sh
 composer experiment:metrics -- --phase baseline --diff-ref experiment-baseline-v1
-git tag -a experiment-baseline-v1 -m "Experiment baseline: improved architecture"
+git tag -a experiment-baseline-v1 -m "Experiment baseline: S1 HTML/JS + Laravel API"
 ```
 
 メトリクス JSON は `experiment/metrics/` に出力されます（Git 管理外）。
@@ -222,39 +246,40 @@ composer experiment:metrics -- --phase after_update --diff-ref experiment-baseli
 composer experiment:metrics -- --phase after_fix --diff-ref experiment-baseline-v1
 ```
 
-### 3. 記録
+### 3. 記録・公開
 
-[docs/EXPERIMENT.md — メトリクス記録テンプレート](docs/EXPERIMENT.md#メトリクス記録テンプレート) の列定義に従い、スプレッドシート等に記録します。
+```bash
+composer experiment:record -- --scenario <id> --write
+./scripts/publish-experiment-results.sh --scenario <id>
+```
 
-### 4. 従来構成との比較
+### 4. S0 Blade との比較
 
-従来構成リポジトリ（`tech-update-task-app-legacy`）で、**同じシナリオ・同じ手順** を繰り返します。
+S0 Blade（`tech-update-task-app`）で **同じシナリオ・同じ手順** を繰り返し、主指標 `git_app` の変更ファイル数・行数を比較します。
 
 ---
 
 ## 更新シナリオ
 
-本研究の **主シナリオは 3 件**。いずれも [docs/scenarios/](docs/scenarios/) に手順があり、`experiment-baseline-v1` から `exp/*` ブランチで実施します。
+本研究の **主シナリオは 3 件**。いずれも `experiment-baseline-v1` から `exp/*` ブランチで実施します。手順は S0 の [docs/scenarios/](../tech-update-task-app/docs/scenarios/) を参照し、**行番号は本リポジトリに読み替え**ます。
 
 | # | シナリオ | ドキュメント |
 |---|----------|--------------|
-| 1 | API 仕様変更: status integer 化 | [api-spec-change-status-int.md](docs/scenarios/api-spec-change-status-int.md) |
-| 2 | API 仕様変更: priority 追加 | [api-spec-change-priority.md](docs/scenarios/api-spec-change-priority.md) |
-| 3 | DB / クエリ変更（タイトル検索） | [db-schema-change.md](docs/scenarios/db-schema-change.md) |
-
-**拡張実験（参考）:** Laravel バージョン更新・テストツール更新・JavaScript ライブラリ変更は、主シナリオとは別枠の参考計測です。手順 MD は本リポジトリには含めず、収集済み結果は `tech-update-task-app-legacy` リポジトリの `experiment/results/` を参照してください。
+| 1 | API 仕様変更: status integer 化 | `api-spec-change-status-int.md` |
+| 2 | API 仕様変更: priority 追加 | `api-spec-change-priority.md` |
+| 3 | DB / クエリ変更（タイトル検索） | `db-schema-change.md` |
 
 ---
 
 ## 評価指標
 
-**主指標は修正工数**（`after_fix` フェーズの変更ファイル数・行数）。API 仕様変更シナリオでは、改良構成と従来構成で **テスト通過率が同一になることがある** ため、通過率だけでは構成差を評価できません。
+**主指標は修正工数**（`after_fix` フェーズの変更ファイル数・行数、`git_app`）。API 仕様変更シナリオでは、スタック間で **テスト通過率が同一になることがある** ため、通過率だけでスタック差を評価しません。
 
 | 優先 | 指標 | 概要 | 取得 |
 |------|------|------|------|
-| **1** | **修正工数** | 変更ファイル数・追加/削除行 | `composer experiment:metrics -- --diff-ref experiment-baseline-v1` の `git.*`（**after_fix**） |
+| **1** | **修正工数** | 変更ファイル数・追加/削除行 | `composer experiment:metrics -- --diff-ref experiment-baseline-v1` の `git_app.*`（**after_fix**） |
 | 2 | 更新直後のテスト失敗数 | PHPUnit / Newman の fail 件数 | 同上（**after_update**） |
-| 3 | 作業時間 | 分 | 手動（[EXPERIMENT.md — メトリクス記録テンプレート](docs/EXPERIMENT.md#メトリクス記録テンプレート)） |
+| 3 | 作業時間 | 分 | 手動記録 |
 | 4 | エラー発生率 | PHPStan 件数、CI 失敗ジョブ | スクリプト + 手動 |
 
 定義の詳細: [docs/EXPERIMENT.md](docs/EXPERIMENT.md)
@@ -265,7 +290,9 @@ composer experiment:metrics -- --phase after_fix --diff-ref experiment-baseline-
 
 | ドキュメント | 内容 |
 |--------------|------|
-| [docs/EXPERIMENT.md](docs/EXPERIMENT.md) | 実験設計・指標・フェーズ |
+| [../EXPERIMENT-STACK.md](../EXPERIMENT-STACK.md) | 研究全体（第2章スタック比較） |
+| [docs/STACK-PROFILE.md](docs/STACK-PROFILE.md) | S1 固有の構成・API・手動確認手順 |
+| [docs/EXPERIMENT.md](docs/EXPERIMENT.md) | 実験設計・指標・フェーズ（第1章由来） |
 | [docs/scenarios/](docs/scenarios/) | 更新シナリオ手順 |
 | [experiment/results/](experiment/results/) | シナリオ結果（publish 先） |
 

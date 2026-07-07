@@ -360,6 +360,10 @@ select.app-input {
   z-index: 50;
 }
 
+.app-modal-overlay[hidden] {
+  display: none;
+}
+
 .app-modal {
   background: #fff;
   border-radius: 0.5rem;
