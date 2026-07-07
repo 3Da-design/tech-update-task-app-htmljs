@@ -72,6 +72,29 @@ git checkout -b exp/db-schema-change experiment-baseline-v1
 composer experiment:metrics -- --phase baseline --diff-ref experiment-baseline-v1
 ```
 
+**Step 1-2.** baseline を GitHub に push し、draft PR を作成して CI 緑を確認する
+
+**この Step の目的:** exp ブランチへの push だけでは CI が走らない（push トリガーは `main`/`master` のみ）。フェーズ別の CI 結果を GitHub 上に残すため、この時点で draft PR を1本作り、以降の各 push を同じ PR に積む。ブランチはタグと同一で差分ゼロのため、`gh pr create` を成立させる anchor として空コミットを1つ積む（app ファイル差分を増やさないので `git_app` メトリクスに影響しない）。
+
+```bash
+git commit --allow-empty -m "chore(exp): baseline anchor for db-schema-change"
+git push -u origin exp/db-schema-change
+gh pr create --draft --base main --head exp/db-schema-change \
+  --title "exp: db-schema-change" \
+  --body "$(cat <<'EOF'
+実験用 PR。マージはしない。
+
+## Test plan（フェーズ別 CI）
+- [ ] baseline コミットで CI 4 ジョブ緑
+- [ ] after_update コミットで CI 結果を記録（本シナリオは fail 0 の可能性が高い）
+- [ ] after_fix コミットで CI 4 ジョブすべて成功
+EOF
+)"
+gh pr checks exp/db-schema-change --watch
+```
+
+GitHub Actions（4 ジョブ）が緑になることを確認し、失敗0を RECORD.md の baseline 行に記録する。
+
 ---
 
 ### Phase 2: 変更適用（テスト・Postman 未着手）
@@ -126,6 +149,17 @@ composer experiment:metrics -- --phase after_update --diff-ref experiment-baseli
 
 > **補足:** 既存の `TaskListFilterTest` は `title=Foo` で `Foo task` を検索しており、ケース無視化後も通過する。新規のケース無視テストは Phase 4 で追加するため、この時点の `phpunit.fail` は **0 の可能性が高い**（シナリオ MD の「テスト先行追加」手順とは異なるが、Phase 2/4 分離フォーマットに沿った想定内の挙動）。
 > 
+
+**Step 3-3.** after_update コミットを push し、CI 結果を確認・記録する
+
+**この Step の目的:** 更新直後の状態を GitHub Actions 上にも残す。本シナリオはこの時点で fail 0（CI 緑）の可能性が高いが、結果に関わらず失敗ジョブ数を RECORD.md の after_update 行に記録する。
+
+```bash
+git push origin exp/db-schema-change
+gh pr checks exp/db-schema-change --watch
+```
+
+> **注意:** `ci.yml` は `concurrency: cancel-in-progress` のため、run が完了する前に次の push（Phase 5）を行うとキャンセルされる。`--watch` で CI 完了を待ってから Phase 4 に進む。
 
 ---
 
@@ -234,16 +268,17 @@ Record baseline, after_update, and after_fix metrics for the
 case-insensitive title search scenario on the improved architecture.
 EOF
 )"
-git push -u origin exp/db-schema-change
+git push origin exp/db-schema-change
 ```
 
-**Step 5-6.** PR を作って CI を確認する。
+**Step 5-6.** after_fix の CI 緑を確認する（PR は Phase 1 Step 1-2 で作成済みのため新規作成しない）。この push が after_fix の CI（緑）を発火する。
 
 ```bash
-gh pr create --base main --head exp/db-schema-change \
-  --title "exp: db-schema-change" \
-  --body "実験用。マージはしない。"
+gh pr checks exp/db-schema-change --watch
+gh pr ready exp/db-schema-change   # 任意: draft を Ready に切り替え
 ```
+
+GitHub Actions 4 ジョブすべて成功を確認し、失敗0を RECORD.md の after_fix 行に記録する。
 
 **Step 5-7.** 結果を公開ディレクトリにコピーする。
 
@@ -269,6 +304,7 @@ git push origin exp/db-schema-change
 ## 5. 完了条件
 
 - [ ]  GitHub Actions 4 ジョブ（`php-tests` / `php-quality` / `frontend` / `api-tests`）すべて成功（`after_fix`）
+- [ ]  各フェーズの GitHub CI を同一 PR に記録済み（baseline / after_update / after_fix）
 - [ ]  `experiment/metrics/runs/<run_id>/` に `baseline` / `after_update` / `after_fix` の 3 フェーズ JSON がある
 - [ ]  `experiment/results/` に `publish-experiment-results.sh` の出力がある
 - [ ]  `?title=important` で `Important task` が Web・API 両方でヒットする

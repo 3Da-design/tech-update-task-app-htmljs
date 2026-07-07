@@ -92,6 +92,29 @@ git checkout -b exp/api-spec-change-priority experiment-baseline-v1
 composer experiment:metrics -- --phase baseline --diff-ref experiment-baseline-v1
 ```
 
+**Step 1-2.** baseline を GitHub に push し、draft PR を作成して CI 緑を確認する。
+
+**この Step の目的:** exp ブランチへの push だけでは CI が走らない（push トリガーは `main`/`master` のみ）。フェーズ別の CI 結果を GitHub 上に残すため、この時点で draft PR を1本作り、以降の各 push を同じ PR に積む。ブランチはタグと同一で差分ゼロのため、`gh pr create` を成立させる anchor として空コミットを1つ積む（app ファイル差分を増やさないので `git_app` メトリクスに影響しない）。
+
+```bash
+git commit --allow-empty -m "chore(exp): baseline anchor for api-spec-change-priority"
+git push -u origin exp/api-spec-change-priority
+gh pr create --draft --base main --head exp/api-spec-change-priority \
+  --title "exp: api-spec-change-priority" \
+  --body "$(cat <<'EOF'
+実験用 PR。マージはしない。
+
+## Test plan（フェーズ別 CI）
+- [ ] baseline コミットで CI 4 ジョブ緑
+- [ ] after_update コミットで CI 赤（テスト未修正・意図的）
+- [ ] after_fix コミットで CI 4 ジョブすべて成功
+EOF
+)"
+gh pr checks exp/api-spec-change-priority --watch
+```
+
+GitHub Actions（4 ジョブ）が緑になることを確認し、失敗0を RECORD.md の baseline 行に記録する。
+
 ---
 
 ### Phase 2: 変更適用（テスト・Postman 未着手）
@@ -624,6 +647,17 @@ composer experiment:metrics -- --phase after_update --diff-ref experiment-baseli
 > **補足:** 非破壊的 CRUD 変更のみなら fail 0 の可能性あり。`TaskListFilterTest` の seed に `priority` が無いと DB エラーになる場合は fail > 0。いずれも記録する。
 > 
 
+**Step 3-3.** after_update コミットを push し、CI 結果を確認・記録する。
+
+**この Step の目的:** 更新直後の状態を GitHub Actions 上にも残す。本シナリオは非破壊的なため fail 0（CI 緑）のこともあれば、seed 不整合で `php-tests`・`api-tests` が赤になることもある。いずれの結果でも失敗ジョブ数を RECORD.md の after_update 行に記録する。
+
+```bash
+git push origin exp/api-spec-change-priority
+gh pr checks exp/api-spec-change-priority --watch
+```
+
+> **注意:** `ci.yml` は `concurrency: cancel-in-progress` のため、run が完了する前に次の push（Phase 5）を行うとキャンセルされる。`--watch` で CI 完了を待ってから Phase 4 に進む。
+
 ---
 
 ### Phase 4: テスト・Postman 修正 → CI 緑
@@ -945,16 +979,17 @@ Record baseline, after_update, and after_fix metrics for the full
 priority attribute scenario on the improved architecture.
 EOF
 )"
-git push -u origin exp/api-spec-change-priority
+git push origin exp/api-spec-change-priority
 ```
 
-**Step 5-6.** PRを作ってCIを確認する。
+**Step 5-6.** after_fix の CI 緑を確認する（PR は Phase 1 Step 1-2 で作成済みのため新規作成しない）。この push が after_fix の CI（緑）を発火する。
 
 ```bash
-gh pr create --base main --head exp/api-spec-change-priority \
-  --title "exp: api-spec-change-priority" \
-  --body "実験用。マージはしない。"
+gh pr checks exp/api-spec-change-priority --watch
+gh pr ready exp/api-spec-change-priority   # 任意: draft を Ready に切り替え
 ```
+
+GitHub Actions 4 ジョブすべて成功を確認し、失敗0を RECORD.md の after_fix 行に記録する。
 
 **Step 5-7.** 結果を公開ディレクトリにコピーする。
 
@@ -978,7 +1013,8 @@ git push origin exp/api-spec-change-priority
 
 ## 5. 完了条件
 
-- [ ]  GitHub Actions 4 ジョブすべて成功
+- [ ]  after_fix で GitHub Actions 4 ジョブすべて成功
+- [ ]  各フェーズの GitHub CI を同一 PR に記録済み（baseline / after_update / after_fix）
 - [ ]  `experiment/metrics/runs/<run_id>/` に 3 フェーズ JSON がある
 - [ ]  API / DB / Web フォームで `priority` が動作する
 - [ ]  Web 一覧に優先度列が表示される
