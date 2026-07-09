@@ -307,7 +307,7 @@ git push origin exp/db-schema-change
 - [ ]  各フェーズの GitHub CI を同一 PR に記録済み（baseline / after_update / after_fix）
 - [ ]  `experiment/metrics/runs/<run_id>/` に `baseline` / `after_update` / `after_fix` の 3 フェーズ JSON がある
 - [ ]  `experiment/results/` に `publish-experiment-results.sh` の出力がある
-- [ ]  `?title=important` で `Important task` が Web・API 両方でヒットする
+- [ ]  `?title=important` で `Important task` が API（一覧取得）でヒットする
 - [ ]  既存の `title=Foo` 部分一致テストが引き続き通過する
 - [ ]  legacy リポジトリ（`tech-update-task-app-legacy`）で同一シナリオを実施し、`git_app.files_changed` を比較できる
 
@@ -315,15 +315,14 @@ git push origin exp/db-schema-change
 
 | ファイル | 理由 |
 | --- | --- |
-| `app/Http/Controllers/Web/TaskController.php` | improved 構成のルール。Controller は HTTP 受け渡しのみで、検索ロジックは Service → Repository に委譲されている |
-| `app/Http/Controllers/API/TaskController.php` | 同上。API も `TaskService::listForDefaultUser` 経由で Repository に到達する |
+| `app/Http/Controllers/API/TaskController.php` | improved 構成のルール。Controller は HTTP 受け渡しのみで、検索ロジックは Service → Repository に委譲される（S1 は API 一本化のため Web Controller は存在しない） |
 | `app/Services/TaskService.php` | タイトル文字列の正規化（trim）のみで、大文字小文字変換はクエリ層の責務 |
 | `app/Repositories/Contracts/TaskRepositoryInterface.php` | db-schema シナリオでは Repository 実装のみ変更。インターフェースのシグネチャ・PHPDoc は不変 |
 | `app/Http/Resources/TaskResource.php` | レスポンス形式の変更はなく、検索挙動のみの変更 |
 | `app/Http/Requests/IndexTaskRequest.php` | `title` クエリパラメータの受け入れルールは変更不要 |
 | `app/Models/Task.php` | DB スキーマ・Model 属性の変更はない（クエリのみ変更） |
 | `database/migrations/*` | カラム追加・型変更はなく、`LOWER()` によるクエリ変更で完結する |
-| `resources/views/tasks/*` | フロントの表示・フォームに変更なし |
+| `public/app/*`（`tasks.html` / `tasks.js`） | フロントの表示・フォームに変更なし（検索は既存の一覧取得 API をそのまま利用） |
 | `postman/Task-API.postman_collection.json` | タイトルフィルタのリクエストがなく、CI Newman は既存コレクションで緑のまま（任意で追加可能） |
 
 ## 関連

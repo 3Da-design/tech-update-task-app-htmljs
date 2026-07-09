@@ -1,7 +1,0 @@
-repository	scenario	phase	app_files_changed	app_lines_added	app_lines_deleted	meta_files_changed	meta_lines_added	meta_lines_deleted	work_minutes	notes
-legacy	api-spec-change-status-int	after_fix	14	103	50	19	291	50	50	アプリ: Controller 2 + テスト等
-improved	api-spec-change-status-int	after_fix	15	87	38	20	275	38	30	アプリ: Service/Repository、Controller 未変更
-legacy	api-spec-change-priority	after_fix	15	263	19	20	451	19	50	アプリ: Web/API Controller 2 箇所
-improved	api-spec-change-priority	after_fix	17	268	10	22	456	10	30	アプリ: API Controller 未変更
-legacy	db-schema-change	after_fix	3	35	2	8	223	2	15	アプリ: Controller 2 + テスト 1
-improved	db-schema-change	after_fix	2	34	1	7	222	1	10	アプリ: Repository 1 + テスト 1

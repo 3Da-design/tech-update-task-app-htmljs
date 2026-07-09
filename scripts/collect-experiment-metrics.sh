@@ -248,19 +248,42 @@ GIT_APP_SHORTSTAT=""
 GIT_APP_FILES_CHANGED=""
 GIT_APP_LINES_ADDED=""
 GIT_APP_LINES_DELETED=""
+# 第2章: 修正がフロント/バックエンドのどちらに集まるかを分解する指標（スタック固有のパス境界）
+# S1 HTML/JS のフロントは public/app 配下（素の HTML + JavaScript）。バックエンドはサーバ + テスト。
+REPOSITORY="stack-s1"
+FRONTEND_PATHSPEC=(public/app)
+BACKEND_PATHSPEC=(app routes database config tests)
+GIT_FRONTEND_SHORTSTAT=""
+GIT_FRONTEND_FILES_CHANGED=""
+GIT_FRONTEND_LINES_ADDED=""
+GIT_FRONTEND_LINES_DELETED=""
+GIT_BACKEND_SHORTSTAT=""
+GIT_BACKEND_FILES_CHANGED=""
+GIT_BACKEND_LINES_ADDED=""
+GIT_BACKEND_LINES_DELETED=""
 if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
   if [[ -n "$DIFF_REF" ]]; then
     GIT_SHORTSTAT="$(git diff --shortstat "${DIFF_REF}..HEAD" 2>/dev/null | tr -d '\n' || true)"
     GIT_APP_SHORTSTAT="$(git diff --shortstat "${DIFF_REF}..HEAD" -- . ':(exclude)experiment/results' ':(exclude)experiment/metrics' 2>/dev/null | tr -d '\n' || true)"
+    GIT_FRONTEND_SHORTSTAT="$(git diff --shortstat "${DIFF_REF}..HEAD" -- "${FRONTEND_PATHSPEC[@]}" 2>/dev/null | tr -d '\n' || true)"
+    GIT_BACKEND_SHORTSTAT="$(git diff --shortstat "${DIFF_REF}..HEAD" -- "${BACKEND_PATHSPEC[@]}" 2>/dev/null | tr -d '\n' || true)"
   else
     GIT_SHORTSTAT="$(git diff --shortstat 2>/dev/null | tr -d '\n' || true)"
     GIT_APP_SHORTSTAT="$(git diff --shortstat -- . ':(exclude)experiment/results' ':(exclude)experiment/metrics' 2>/dev/null | tr -d '\n' || true)"
+    GIT_FRONTEND_SHORTSTAT="$(git diff --shortstat -- "${FRONTEND_PATHSPEC[@]}" 2>/dev/null | tr -d '\n' || true)"
+    GIT_BACKEND_SHORTSTAT="$(git diff --shortstat -- "${BACKEND_PATHSPEC[@]}" 2>/dev/null | tr -d '\n' || true)"
   fi
   if [[ -n "$GIT_SHORTSTAT" ]]; then
     read -r GIT_FILES_CHANGED GIT_LINES_ADDED GIT_LINES_DELETED < <(parse_git_shortstat "$GIT_SHORTSTAT")
   fi
   if [[ -n "$GIT_APP_SHORTSTAT" ]]; then
     read -r GIT_APP_FILES_CHANGED GIT_APP_LINES_ADDED GIT_APP_LINES_DELETED < <(parse_git_shortstat "$GIT_APP_SHORTSTAT")
+  fi
+  if [[ -n "$GIT_FRONTEND_SHORTSTAT" ]]; then
+    read -r GIT_FRONTEND_FILES_CHANGED GIT_FRONTEND_LINES_ADDED GIT_FRONTEND_LINES_DELETED < <(parse_git_shortstat "$GIT_FRONTEND_SHORTSTAT")
+  fi
+  if [[ -n "$GIT_BACKEND_SHORTSTAT" ]]; then
+    read -r GIT_BACKEND_FILES_CHANGED GIT_BACKEND_LINES_ADDED GIT_BACKEND_LINES_DELETED < <(parse_git_shortstat "$GIT_BACKEND_SHORTSTAT")
   fi
 fi
 
@@ -276,9 +299,11 @@ fi
 
 export OUTPUT PHASE TIMESTAMP RUN_ID PHPSTAN_EXIT PHPSTAN_ERRORS ESLINT_EXIT BUILD_EXIT PHPUNIT_EXIT NEWMAN_EXIT
 export PHPUNIT_PASS PHPUNIT_FAIL PHPUNIT_TOTAL NEWMAN_PASS NEWMAN_FAIL NEWMAN_TOTAL
-export phpunit_rate newman_rate GIT_SHORTSTAT GIT_APP_SHORTSTAT DIFF_REF
+export phpunit_rate newman_rate GIT_SHORTSTAT GIT_APP_SHORTSTAT DIFF_REF REPOSITORY
 export GIT_FILES_CHANGED GIT_LINES_ADDED GIT_LINES_DELETED
 export GIT_APP_FILES_CHANGED GIT_APP_LINES_ADDED GIT_APP_LINES_DELETED
+export GIT_FRONTEND_SHORTSTAT GIT_FRONTEND_FILES_CHANGED GIT_FRONTEND_LINES_ADDED GIT_FRONTEND_LINES_DELETED
+export GIT_BACKEND_SHORTSTAT GIT_BACKEND_FILES_CHANGED GIT_BACKEND_LINES_ADDED GIT_BACKEND_LINES_DELETED
 
 python3 - <<'PY'
 import json, os
@@ -286,7 +311,7 @@ doc = {
     "run_id": os.environ["RUN_ID"],
     "phase": os.environ["PHASE"],
     "recorded_at": os.environ["TIMESTAMP"],
-    "repository": "improved",
+    "repository": os.environ.get("REPOSITORY") or "improved",
     "phpstan": {
         "exit_code": int(os.environ["PHPSTAN_EXIT"]),
         "error_count": int(os.environ["PHPSTAN_ERRORS"]),
@@ -323,6 +348,22 @@ doc = {
         "lines_deleted": int(os.environ.get("GIT_APP_LINES_DELETED") or 0),
         "diff_shortstat": os.environ.get("GIT_APP_SHORTSTAT", ""),
         "excludes": ["experiment/results/", "experiment/metrics/"],
+    },
+    "git_frontend": {
+        "diff_ref": os.environ.get("DIFF_REF", "") or None,
+        "files_changed": int(os.environ.get("GIT_FRONTEND_FILES_CHANGED") or 0),
+        "lines_added": int(os.environ.get("GIT_FRONTEND_LINES_ADDED") or 0),
+        "lines_deleted": int(os.environ.get("GIT_FRONTEND_LINES_DELETED") or 0),
+        "diff_shortstat": os.environ.get("GIT_FRONTEND_SHORTSTAT", ""),
+        "includes": ["public/app/"],
+    },
+    "git_backend": {
+        "diff_ref": os.environ.get("DIFF_REF", "") or None,
+        "files_changed": int(os.environ.get("GIT_BACKEND_FILES_CHANGED") or 0),
+        "lines_added": int(os.environ.get("GIT_BACKEND_LINES_ADDED") or 0),
+        "lines_deleted": int(os.environ.get("GIT_BACKEND_LINES_DELETED") or 0),
+        "diff_shortstat": os.environ.get("GIT_BACKEND_SHORTSTAT", ""),
+        "includes": ["app/", "routes/", "database/", "config/", "tests/"],
     },
     "git": {
         "diff_ref": os.environ.get("DIFF_REF", "") or None,

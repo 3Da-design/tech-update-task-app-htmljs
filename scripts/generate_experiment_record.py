@@ -36,6 +36,12 @@ SPREADSHEET_HEADERS = [
     "app_files_changed",
     "app_lines_added",
     "app_lines_deleted",
+    "frontend_files_changed",
+    "frontend_lines_added",
+    "frontend_lines_deleted",
+    "backend_files_changed",
+    "backend_lines_added",
+    "backend_lines_deleted",
     "meta_files_changed",
     "meta_lines_added",
     "meta_lines_deleted",
@@ -122,7 +128,7 @@ def spreadsheet_row(
             scenario,
             phase,
             "",
-            *([""] * 20),
+            *([""] * 25),
             f"(missing {phase}.json)",
             "",
         ]
@@ -134,6 +140,8 @@ def spreadsheet_row(
     ps = data.get("phpstan", {})
     es = data.get("eslint", {})
     git_app = git_section(data, "git_app")
+    git_frontend = data.get("git_frontend", {})
+    git_backend = data.get("git_backend", {})
     git_meta = data.get("git", {})
     json_rel = f"experiment/metrics/runs/{run_id}/{phase}.json"
 
@@ -156,6 +164,12 @@ def spreadsheet_row(
         str(git_app.get("files_changed", "")),
         str(git_app.get("lines_added", "")),
         str(git_app.get("lines_deleted", "")),
+        str(git_frontend.get("files_changed", "")),
+        str(git_frontend.get("lines_added", "")),
+        str(git_frontend.get("lines_deleted", "")),
+        str(git_backend.get("files_changed", "")),
+        str(git_backend.get("lines_added", "")),
+        str(git_backend.get("lines_deleted", "")),
         str(git_meta.get("files_changed", "")),
         str(git_meta.get("lines_added", "")),
         str(git_meta.get("lines_deleted", "")),
@@ -231,12 +245,16 @@ def build_markdown(run_id: str, scenario: str, phases: dict[str, dict | None]) -
             lines.append(f"- **JSON:** `{json_path}` — **なし**\n\n")
             continue
         git_app = git_section(data, "git_app")
+        git_frontend = data.get("git_frontend", {})
+        git_backend = data.get("git_backend", {})
         git_meta = data.get("git", {})
         diff_ref = git_meta.get("diff_ref") or git_app.get("diff_ref") or ""
         lines.append(f"- **JSON:** [`{phase}.json`]({json_path})\n")
         if diff_ref:
             lines.append(f"- **git diff_ref:** `{diff_ref}`\n")
         lines.append(f"- **git_app（アプリ修正工数・主指標）:** {fmt_git_line(git_app)}\n")
+        lines.append(f"- **git_frontend（フロント別・第2章）:** {fmt_git_line(git_frontend)}\n")
+        lines.append(f"- **git_backend（バックエンド別・第2章）:** {fmt_git_line(git_backend)}\n")
         lines.append(f"- **git（実験メタデータ込み）:** {fmt_git_line(git_meta)}\n\n")
 
     lines.append('<a id="tsv"></a>\n\n<details>\n<summary>スプレッドシート用 TSV（全列）</summary>\n\n')
