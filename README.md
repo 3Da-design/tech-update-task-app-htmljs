@@ -7,6 +7,20 @@ improved 設計（Controller / Service / Repository 分離）を維持したま�
 
 ---
 
+## ⚠️ 利用にあたって（Notice）
+
+本リポジトリは研究目的で公開しているものです。著作権は著者に帰属します（All Rights Reserved）。
+
+- 閲覧・参照は自由です。
+- **無断でのクローン・複製・再配布・改変・再利用を禁止します。**
+- 利用を希望する場合は事前にご連絡ください。
+
+> **English:** This repository is published for research purposes only. All rights reserved.
+> Cloning, copying, redistribution, modification, or reuse without prior permission is **not allowed**.
+> Please contact the author if you wish to use it.
+
+---
+
 ## 目次
 
 1. [研究ゴールと比較設計](#研究ゴールと比較設計)
