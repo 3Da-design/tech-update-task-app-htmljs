@@ -36,7 +36,7 @@ class TaskApiTest extends TestCase
       'user_id' => $this->user->id,
       'title' => 'A',
       'description' => null,
-      'status' => 'todo',
+      'status' => '0',
       'due_date' => null,
     ]);
 
@@ -51,7 +51,7 @@ class TaskApiTest extends TestCase
   {
     $response = $this->actingAs($this->user)->postJson('/api/tasks', [
       'title' => 'New Task',
-      'status' => 'todo',
+      'status' => '0',
     ]);
 
     $response->assertCreated();
@@ -75,7 +75,7 @@ class TaskApiTest extends TestCase
   public function test_store_without_title_returns_422(): void
   {
     $response = $this->actingAs($this->user)->postJson('/api/tasks', [
-      'status' => 'todo',
+      'status' => '0',
     ]);
 
     $response->assertStatus(422);
@@ -90,13 +90,13 @@ class TaskApiTest extends TestCase
       'user_id' => $userId,
       'title' => 'Old',
       'description' => null,
-      'status' => 'todo',
+      'status' => '0',
       'due_date' => null,
     ]);
 
     $response = $this->actingAs($this->user)->putJson("/api/tasks/{$task->id}", [
       'title' => 'Updated',
-      'status' => 'in_progress',
+      'status' => '1',
     ]);
 
     $response->assertOk();
@@ -108,7 +108,7 @@ class TaskApiTest extends TestCase
   {
     $response = $this->actingAs($this->user)->putJson('/api/tasks/999999', [
       'title' => 'X',
-      'status' => 'todo',
+      'status' => '0',
     ]);
 
     $response->assertNotFound();
@@ -122,7 +122,7 @@ class TaskApiTest extends TestCase
       'user_id' => $userId,
       'title' => 'To delete',
       'description' => null,
-      'status' => 'todo',
+      'status' => '0',
       'due_date' => null,
     ]);
 

@@ -192,7 +192,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Postman task\",\n  \"status\": \"todo\"\n}"
+              "raw": "{\n  \"title\": \"Postman task\",\n  \"status\": 0\n}"
             },
             "url": "{{baseUrl}}/api/tasks"
           },
@@ -252,7 +252,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Updated from Postman\",\n  \"status\": \"in_progress\"\n}"
+              "raw": "{\n  \"title\": \"Updated from Postman\",\n  \"status\": 1\n}"
             },
             "url": "{{baseUrl}}/api/tasks/{{taskId}}"
           },
