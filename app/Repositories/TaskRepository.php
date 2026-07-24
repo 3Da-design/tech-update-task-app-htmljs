@@ -18,7 +18,7 @@ class TaskRepository implements TaskRepositoryInterface
     }
 
     $status = $filters['status'] ?? null;
-    if (is_string($status) && $status !== '') {
+    if (is_int($status)) {
       $query->where('status', $status);
     }
 

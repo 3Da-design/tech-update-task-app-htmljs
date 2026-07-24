@@ -63,6 +63,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // ─── Task list ─────────────────────────────────────
+  var STATUS_LABELS = { 0: 'todo', 1: 'in_progress', 2: 'done' };
   var currentTasks = [];
 
   function loadTasks() {
@@ -103,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function () {
     tbody.innerHTML = tasks.map(function (task) {
       return '<tr>'
         + '<td class="title-cell">' + escapeHtml(task.title) + '</td>'
-        + '<td>' + escapeHtml(task.status) + '</td>'
+        + '<td>' + escapeHtml(STATUS_LABELS[task.status] || task.status) + '</td>'
         + '<td>' + (task.due_date || '-') + '</td>'
         + '<td class="text-right">'
         +   '<button class="app-link-btn" data-edit="' + task.id + '">編集</button> '
@@ -133,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('task-id').value = '';
     document.getElementById('task-title-input').value = '';
     document.getElementById('task-description').value = '';
-    document.getElementById('task-status').value = 'todo';
+    document.getElementById('task-status').value = '0';
     document.getElementById('task-due-date').value = '';
     document.getElementById('form-errors').hidden = true;
     document.getElementById('modal-overlay').hidden = false;
@@ -161,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var data = {
       title: document.getElementById('task-title-input').value,
       description: document.getElementById('task-description').value || null,
-      status: document.getElementById('task-status').value,
+      status: Number(document.getElementById('task-status').value),
       due_date: document.getElementById('task-due-date').value || null,
     };
 

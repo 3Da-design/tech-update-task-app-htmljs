@@ -40,7 +40,7 @@ class IndexTaskRequest extends FormRequest
   {
     return [
       'title' => ['nullable', 'string', 'max:255'],
-      'status' => ['nullable', 'string', Rule::in(config('task.status_values'))],
+      'status' => ['nullable', 'integer', Rule::in(config('task.status_values'))],
       'due_date_sort' => ['nullable', 'string', Rule::in(['asc', 'desc'])],
     ];
   }
