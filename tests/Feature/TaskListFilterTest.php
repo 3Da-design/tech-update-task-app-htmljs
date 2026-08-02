@@ -68,6 +68,39 @@ class TaskListFilterTest extends TestCase
     $this->assertSame(['Foo task', 'Baz task', 'Bar task'], $titles);
   }
 
+  public function test_api_index_filters_by_priority(): void
+  {
+    $this->seedTasksWithDistinctPriorities();
+
+    $response = $this->actingAs($this->user)->getJson('/api/tasks?priority=high');
+
+    $response->assertOk();
+    $titles = collect($response->json('data'))->pluck('title')->all();
+    $this->assertSame(['Bar task'], $titles);
+  }
+
+  public function test_api_index_sorts_priority_asc(): void
+  {
+    $this->seedTasksWithDistinctPriorities();
+
+    $response = $this->actingAs($this->user)->getJson('/api/tasks?priority_sort=asc&due_date_sort=asc');
+
+    $response->assertOk();
+    $titles = collect($response->json('data'))->pluck('title')->all();
+    $this->assertSame(['Foo task', 'Baz task', 'Bar task'], $titles);
+  }
+
+  public function test_api_index_sorts_priority_desc(): void
+  {
+    $this->seedTasksWithDistinctPriorities();
+
+    $response = $this->actingAs($this->user)->getJson('/api/tasks?priority_sort=desc&due_date_sort=asc');
+
+    $response->assertOk();
+    $titles = collect($response->json('data'))->pluck('title')->all();
+    $this->assertSame(['Bar task', 'Baz task', 'Foo task'], $titles);
+  }
+
   private function seedTasks(): void
   {
     Task::query()->create([
@@ -75,6 +108,7 @@ class TaskListFilterTest extends TestCase
       'title' => 'Foo task',
       'description' => null,
       'status' => 'todo',
+      'priority' => 'medium',
       'due_date' => null,
     ]);
 
@@ -83,6 +117,7 @@ class TaskListFilterTest extends TestCase
       'title' => 'Bar task',
       'description' => null,
       'status' => 'done',
+      'priority' => 'medium',
       'due_date' => '2026-06-01',
     ]);
 
@@ -91,7 +126,38 @@ class TaskListFilterTest extends TestCase
       'title' => 'Baz task',
       'description' => null,
       'status' => 'in_progress',
+      'priority' => 'medium',
       'due_date' => '2026-06-15',
+    ]);
+  }
+
+  private function seedTasksWithDistinctPriorities(): void
+  {
+    Task::query()->create([
+      'user_id' => $this->user->id,
+      'title' => 'Foo task',
+      'description' => null,
+      'status' => 'todo',
+      'priority' => 'low',
+      'due_date' => null,
+    ]);
+
+    Task::query()->create([
+      'user_id' => $this->user->id,
+      'title' => 'Bar task',
+      'description' => null,
+      'status' => 'done',
+      'priority' => 'high',
+      'due_date' => null,
+    ]);
+
+    Task::query()->create([
+      'user_id' => $this->user->id,
+      'title' => 'Baz task',
+      'description' => null,
+      'status' => 'in_progress',
+      'priority' => 'medium',
+      'due_date' => null,
     ]);
   }
 }
