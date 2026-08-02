@@ -25,8 +25,8 @@
 | フェーズ | CI (失敗/総数) | 作業時間 (分) | アプリ変更ファイル | アプリ追加行 | アプリ削除行 | コミット数 | 手動バグ | メモ |
 |:---------|:---------------|:--------------|:-------------------|:-------------|:-------------|:-----------|:---------|:-----|
 | ベースライン | 0/4 |　5 | 0 | 0 | 0 | 1 | 0 | 全4ジョブ green（基準点・[run 30724473472](https://github.com/3Da-design/tech-update-task-app-htmljs/actions/runs/30724473472) / `06a31b8`）。属性は title/description/due_date/status の4項目。 |
-| 更新直後 | 0/4 | 43 | 12 | 97 | 7 | 1 | 1 | 非破壊的な属性追加のため CI 緑（[run 30726177609](https://github.com/3Da-design/tech-update-task-app-htmljs/actions/runs/30726177609) / `36d8872`）。`TaskListFilterTest` の seed は priority 無しでも通過。手動バグ1件: `tasks.js` の `prioritySortEl` 宣言漏れ（ESLint `no-undef`）で [run 30726013413](https://github.com/3Da-design/tech-update-task-app-htmljs/actions/runs/30726013413) が Frontend 1/4 失敗 → amend で修正・force-push、当該 run は無効として不採用。 |
-| 修正後 | 未実行 | 8 | 15 | 188 | 10 | 1 | 0 | ローカルは PHPUnit 44/44・Newman 15/15・PHPStan 0・ESLint OK。**`b8f7f8a` が未 push のため CI 未実行** — push 後に失敗/総数を記入すること。 |
+| 更新直後 | 0/4 | 43 | 12 | 97 | 7 | 1 | 1 | 非破壊的な属性追加のため CI 緑（[run 30726177609](https://github.com/3Da-design/tech-update-task-app-htmljs/actions/runs/30726177609) / `36d8872`）。`TaskListFilterTest` の seed は priority 無しでも通過し、テスト・Postman 未更新でも fail 0。 |
+| 修正後 | 0/4 | 32 | 15 | 188 | 10 | 1 | 0 | 全4ジョブ green（[run 30726522972](https://github.com/3Da-design/tech-update-task-app-htmljs/actions/runs/30726522972) / `4170791`）。テスト・Postman を priority 対応に更新し PHPUnit 44/44・Newman 15/15 へ拡張。 |
 
 ## フェーズ別詳細
 
