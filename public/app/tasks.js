@@ -69,10 +69,14 @@ document.addEventListener('DOMContentLoaded', function () {
     var params = new URLSearchParams();
     var title = document.getElementById('filter-title').value;
     var status = document.getElementById('filter-status').value;
+    var priority = document.getElementById('filter-priority').value;
     var sortEl = document.querySelector('input[name="due_date_sort"]:checked');
+    var prioritySortEl = document.querySelector('input[name="priority_sort"]:checked');
 
     if (title) params.set('title', title);
     if (status) params.set('status', status);
+    if (priority) params.set('priority', priority);
+    if (prioritySortEl) params.set('priority_sort', prioritySortEl.value);
     if (sortEl) params.set('due_date_sort', sortEl.value);
 
     var qs = params.toString();
@@ -96,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var tbody = document.getElementById('task-list');
 
     if (!tasks || tasks.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4" class="empty-cell">タスクがありません</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-cell">タスクがありません</td></tr>';
       return;
     }
 
@@ -104,6 +108,7 @@ document.addEventListener('DOMContentLoaded', function () {
       return '<tr>'
         + '<td class="title-cell">' + escapeHtml(task.title) + '</td>'
         + '<td>' + escapeHtml(task.status) + '</td>'
+        + '<td>' + escapeHtml(task.priority) + '</td>'
         + '<td>' + (task.due_date || '-') + '</td>'
         + '<td class="text-right">'
         +   '<button class="app-link-btn" data-edit="' + task.id + '">編集</button> '
@@ -134,6 +139,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('task-title-input').value = '';
     document.getElementById('task-description').value = '';
     document.getElementById('task-status').value = 'todo';
+    document.getElementById('task-priority').value = 'medium';
     document.getElementById('task-due-date').value = '';
     document.getElementById('form-errors').hidden = true;
     document.getElementById('modal-overlay').hidden = false;
@@ -145,6 +151,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('task-title-input').value = task.title;
     document.getElementById('task-description').value = task.description || '';
     document.getElementById('task-status').value = task.status;
+    document.getElementById('task-priority').value = task.priority || 'medium';
     document.getElementById('task-due-date').value = task.due_date || '';
     document.getElementById('form-errors').hidden = true;
     document.getElementById('modal-overlay').hidden = false;
@@ -162,6 +169,7 @@ document.addEventListener('DOMContentLoaded', function () {
       title: document.getElementById('task-title-input').value,
       description: document.getElementById('task-description').value || null,
       status: document.getElementById('task-status').value,
+      priority: document.getElementById('task-priority').value,
       due_date: document.getElementById('task-due-date').value || null,
     };
 

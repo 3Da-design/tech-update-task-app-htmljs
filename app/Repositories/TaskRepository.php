@@ -22,6 +22,17 @@ class TaskRepository implements TaskRepositoryInterface
       $query->where('status', $status);
     }
 
+    $priority = $filters['priority'] ?? null;
+    if (is_string($priority) && $priority !== '') {
+      $query->where('priority', $priority);
+    }
+
+    $prioritySort = $filters['priority_sort'] ?? 'asc';
+    $priorityDirection = $prioritySort === 'desc' ? 'desc' : 'asc';
+    $query->orderByRaw(
+      "CASE priority WHEN 'low' THEN 1 WHEN 'medium' THEN 2 WHEN 'high' THEN 3 ELSE 4 END {$priorityDirection}"
+    );
+
     $dueSort = $filters['due_date_sort'] ?? 'asc';
     $direction = $dueSort === 'desc' ? 'desc' : 'asc';
     $query->orderByRaw('due_date IS NULL DESC')->orderBy('due_date', $direction)->orderBy('id');

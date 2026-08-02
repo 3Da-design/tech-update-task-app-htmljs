@@ -27,6 +27,7 @@ class StoreTaskRequest extends FormRequest
       'title' => ['required', 'string', 'max:255'],
       'description' => ['nullable', 'string'],
       'status' => ['required', 'string', Rule::in(config('task.status_values'))],
+      'priority' => ['nullable', 'string', Rule::in(config('task.priority_values'))],
       'due_date' => ['nullable', 'date'],
     ];
   }
