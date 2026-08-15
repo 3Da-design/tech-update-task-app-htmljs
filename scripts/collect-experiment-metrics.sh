@@ -271,6 +271,13 @@ GIT_APP_EXCLUDES=(
   ':(exclude)experiment/metrics'
   ':(exclude)public/assets'
   ':(exclude)public/index.html'
+  # 計測器と実験記録の機構そのもの。測定対象ではないので主指標に数えない。
+  # curl-api-smoke.sh / check-quality.sh は API 契約・品質ゲートの検証であり
+  # postman/ と同じ性格なので、あえて除外しない（仕様変更で直る余地がある）。
+  ':(exclude)scripts/collect-experiment-metrics.sh'
+  ':(exclude)scripts/generate_experiment_record.py'
+  ':(exclude)scripts/publish-experiment-results.sh'
+  ':(exclude)scripts/lib'
 )
 if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
   if [[ -n "$DIFF_REF" ]]; then
@@ -358,7 +365,7 @@ doc = {
         "lines_added": int(os.environ.get("GIT_APP_LINES_ADDED") or 0),
         "lines_deleted": int(os.environ.get("GIT_APP_LINES_DELETED") or 0),
         "diff_shortstat": os.environ.get("GIT_APP_SHORTSTAT", ""),
-        "excludes": ["experiment/results/", "experiment/metrics/", "public/assets/", "public/index.html"],
+        "excludes": ["experiment/results/", "experiment/metrics/", "public/assets/", "public/index.html", "scripts/collect-experiment-metrics.sh", "scripts/generate_experiment_record.py", "scripts/publish-experiment-results.sh", "scripts/lib/"],
     },
     "git_frontend": {
         "diff_ref": os.environ.get("DIFF_REF", "") or None,
