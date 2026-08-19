@@ -1,0 +1,78 @@
+{
+  "run_id": "run-20260819T051131Z",
+  "phase": "baseline",
+  "recorded_at": "20260819T051131Z",
+  "repository": "stack-s1",
+  "phpstan": {
+    "exit_code": 0,
+    "error_count": 0,
+    "ok": true
+  },
+  "eslint": {
+    "exit_code": 0,
+    "ok": true
+  },
+  "vite_build": {
+    "exit_code": 0,
+    "ok": true
+  },
+  "phpunit": {
+    "exit_code": 0,
+    "pass": 40,
+    "fail": 0,
+    "total": 40,
+    "pass_rate": 100.0,
+    "ok": true
+  },
+  "newman": {
+    "exit_code": 0,
+    "pass": 13,
+    "fail": 0,
+    "total": 13,
+    "pass_rate": 100.0,
+    "ok": true
+  },
+  "git_app": {
+    "diff_ref": "experiment-baseline-v1",
+    "files_changed": 0,
+    "lines_added": 0,
+    "lines_deleted": 0,
+    "diff_shortstat": "",
+    "excludes": [
+      "experiment/results/",
+      "experiment/metrics/"
+    ]
+  },
+  "git_frontend": {
+    "diff_ref": "experiment-baseline-v1",
+    "files_changed": 0,
+    "lines_added": 0,
+    "lines_deleted": 0,
+    "diff_shortstat": "",
+    "includes": [
+      "public/app/"
+    ]
+  },
+  "git_backend": {
+    "diff_ref": "experiment-baseline-v1",
+    "files_changed": 0,
+    "lines_added": 0,
+    "lines_deleted": 0,
+    "diff_shortstat": "",
+    "includes": [
+      "app/",
+      "routes/",
+      "database/",
+      "config/",
+      "tests/"
+    ]
+  },
+  "git": {
+    "diff_ref": "experiment-baseline-v1",
+    "files_changed": 0,
+    "lines_added": 0,
+    "lines_deleted": 0,
+    "diff_shortstat": "",
+    "includes_experiment_metadata": true
+  }
+}
