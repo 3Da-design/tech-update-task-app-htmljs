@@ -25,27 +25,29 @@
 
 improved 構成では、本番コードの修正は `TaskRepository::getFiltered` のみに集約されます。Controller・Service・Interface は触りません。テスト追加は Phase 4 で行い、Phase 2 では Repository のクエリのみを変更します。
 
+S1 は API + 静的フロント（`public/app/`）に一本化されており、Blade のタスクルート（`/tasks`）は存在しません。したがって検証は `GET /api/tasks?title=` の API テストのみで行います（S0 Blade 版の web テストは本スタックでは成立しません）。
+
 ## 1. 概要
 
 | 項目 | 値 |
 | --- | --- |
-| リポジトリ | improved |
-| 実験の内容 | タイトル検索を大文字小文字無視にする |
-| ブランチ名 | exp/db-schema-change |
-| 参照MD | docs/scenarios/db-schema-change.md |
+| リポジトリ | tech-update-task-app-htmljs（S1 / improved） |
+| 実験の内容 | タイトル検索を大文字小文字無視にする（`?title=` 部分一致） |
+| ブランチ名 | `exp/db-schema-change` |
+| 参照MD | `docs/scenarios/db-schema-change.md` |
 
 ## 2. 事前条件チェック
 
 - [ ]  experiment-baseline-v1 または CI 緑 — 比較基準タグからブランチを切り、メトリクス diff の参照点を固定するため
 - [ ]  Docker 起動 — `check-quality.sh` と PHPUnit / Newman がコンテナ経由で動くため
-- [ ]  PostgreSQL（status数値化・タイトル検索のみ） — `LIKE` の大文字小文字挙動を CI（GitHub Actions の `postgres:16-alpine`）とローカル Docker で一致させるため
+- [ ]  PostgreSQL — `LIKE` / `LOWER()` の大文字小文字挙動を CI（GitHub Actions の `postgres:16-alpine`）とローカル Docker で一致させるため
 
 ## 3. 修正対象ファイル一覧
 
 | # | ファイルパス | 修正箇所 | フェーズ | 作業内容 | 解説（なぜ触るか） |
 | --- | --- | --- | --- | --- | --- |
 | 1 | `app/Repositories/TaskRepository.php` | `getFiltered()` 15–18 行目 | Phase 2 | `LOWER(title) LIKE ?` に変更 | タイトル検索の大文字小文字無視はクエリ層の責務であり、改良構成ではここだけ直せば Web/API 両方に反映される |
-| 2 | `tests/Feature/TaskListFilterTest.php` | クラス末尾（`seedTasks()` の前） | Phase 4 | ケース無視テスト 2 件を追加 | 新仕様を自動検証し、回帰を防ぐ。シナリオ MD で定義されたテスト名・期待値を実装する |
+| 2 | `tests/Feature/TaskListFilterTest.php` | `seedTasks()` の直前（baseline 行 69 の後） | Phase 4 | ケース無視テスト 1 件（API）を追加 | 新仕様を自動検証し、回帰を防ぐ。S1 は API 一本化のため、検証は `GET /api/tasks?title=` の 1 件のみ |
 | 3 | `postman/Task-API.postman_collection.json` | （任意） | Phase 4 | 変更なしで可 | 現コレクションにタイトルフィルタのリクエストはなく、CI の Newman は既存テストのみ実行されるため必須ではない |
 
 ## 4. 実施手順
@@ -147,7 +149,7 @@ EOF
 composer experiment:metrics -- --phase after_update --diff-ref experiment-baseline-v1
 ```
 
-> **補足:** 既存の `TaskListFilterTest` は `title=Foo` で `Foo task` を検索しており、ケース無視化後も通過する。新規のケース無視テストは Phase 4 で追加するため、この時点の `phpunit.fail` は **0 の可能性が高い**（シナリオ MD の「テスト先行追加」手順とは異なるが、Phase 2/4 分離フォーマットに沿った想定内の挙動）。
+> **補足:** 既存の `TaskListFilterTest` は `title=Foo` で `Foo task` を検索しており、ケース無視化後も通過する。新規のケース無視テストは Phase 4 で追加するため、この時点の `phpunit.fail` は **0 の可能性が高い**（シナリオ MD の「テスト先行追加」手順とは異なるが、Phase 2/4 分離フォーマットに沿った想定内の挙動）。**期待値: PHPUnit 40/40・Newman 13/13**（baseline と同数）。
 > 
 
 **Step 3-3.** after_update コミットを push し、CI 結果を確認・記録する
@@ -167,31 +169,15 @@ gh pr checks exp/db-schema-change --watch
 
 **この Phase の目的:** 新仕様（大文字小文字無視）をテストで固定し、CI を緑にする。
 
-**Step 4-1.** ケース無視テスト 2 件を `TaskListFilterTest` に追加する
+**Step 4-1.** ケース無視テスト 1 件を `TaskListFilterTest` に追加する
 
 - **ファイル:** `tests/Feature/TaskListFilterTest.php`
-- **場所:** `test_api_index_sorts_due_date_desc()` の直後（行 125 の後）、`seedTasks()` の前
-- **解説:** シナリオ MD で定義されたテスト名で、Web/API それぞれ `Important task` に `?title=important` がヒットすることを検証する。Phase 2 で Repository を直済みのため、このテスト追加後は即座に緑になる想定。
+- **場所:** `test_api_index_sorts_due_date_desc()` の直後（`experiment-baseline-v1` の行 69 の後）、`seedTasks()`（行 71）の前
+- **解説:** `Important task` に `?title=important` がヒットすることを API で検証する。Phase 2 で Repository を修正済みのため、このテスト追加後は即座に緑になる想定。
 - **変更前:** （該当メソッドなし）
-- **変更後:** 以下 2 メソッドを追加
+- **変更後:** 以下 1 メソッドを追加
 
 ```php
-  public function test_web_index_title_search_is_case_insensitive(): void
-  {
-    Task::query()->create([
-      'user_id' => $this->user->id,
-      'title' => 'Important task',
-      'description' => null,
-      'status' => 'todo',
-      'due_date' => null,
-    ]);
-
-    $response = $this->actingAs($this->user)->get('/tasks?title=important');
-
-    $response->assertOk();
-    $response->assertSee('Important task', false);
-  }
-
   public function test_api_index_title_search_is_case_insensitive(): void
   {
     Task::query()->create([
@@ -210,6 +196,8 @@ gh pr checks exp/db-schema-change --watch
   }
 ```
 
+> **S1 での注意:** S0（Blade）版シナリオには対になる web テスト `test_web_index_title_search_is_case_insensitive()`（`$this->get('/tasks?title=important')` + `assertSee`）があるが、**S1 では追加しない**。S1 は API + 静的フロントに一本化されており `routes/web.php` にタスクルートが無いため、`/tasks` は 404 を返して必ず失敗する。S2（React）も同様に API テストのみで検証する。
+
 **Step 4-2.** CI 品質チェックを実行する
 
 ```bash
@@ -217,6 +205,7 @@ gh pr checks exp/db-schema-change --watch
 ```
 
 > **補足:** フロントエンド変更はないため `composer npm:docker-build` は不要。`check-quality.sh` 内で ESLint・Vite build が実行される。
+> **期待値:** PHPUnit **41/41**（baseline 40 + 追加 1）・Newman 13/13・PHPStan 0 件・ESLint OK。
 > 
 
 ---
@@ -309,7 +298,7 @@ git push origin exp/db-schema-change
 - [ ]  `experiment/results/` に `publish-experiment-results.sh` の出力がある
 - [ ]  `?title=important` で `Important task` が API（一覧取得）でヒットする
 - [ ]  既存の `title=Foo` 部分一致テストが引き続き通過する
-- [ ]  legacy リポジトリ（`tech-update-task-app-legacy`）で同一シナリオを実施し、`git_app.files_changed` を比較できる
+- [ ]  S0（`tech-update-task-app-improved`）/ S2（`tech-update-task-app-react`）で同一シナリオを実施し、`git_app.files_changed` を比較できる（第2章では legacy は第1章データの参照専用）
 
 ## 6. 触らないファイルとその理由
 

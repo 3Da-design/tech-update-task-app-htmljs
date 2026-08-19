@@ -195,9 +195,11 @@ legacy / improved で **パス規則が異なる**。シナリオ ID（`<scenari
 | `meta_lines_added` | メタデータ込み追加行数（参考） | metrics JSON `git.lines_added` |
 | `meta_lines_deleted` | メタデータ込み削除行数（参考） | metrics JSON `git.lines_deleted` |
 | `commits` | コミット数 | **手動** |
-| `manual_bugs` | 手動で発見した不具合件数 | **手動** |
+| `manual_bugs` | 手動で発見した**アプリの**不具合件数（手順書・環境側の不備は計上しない） | **手動** |
 | `metrics_json` | JSON ファイルへの相対パス | 自動 |
 | `notes` | メモ | **手動** |
+
+> **`manual_bugs` の計上範囲:** アプリの不具合のみを数える。シナリオ手順書や環境側の不備（例: S0 由来の手順を S1 に適用し、存在しない Blade ルートを叩いて 404 になる）は **計上せず `notes` に記録する**。`manual_bugs` はスタック横断で並べる列であり、手順書由来の差を混ぜるとスタック差でない差が出て第2章の比較を歪めるため。
 
 ### 記録例（CSV ヘッダ）
 
