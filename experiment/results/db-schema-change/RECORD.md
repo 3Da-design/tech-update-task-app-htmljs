@@ -26,7 +26,7 @@
 |:---------|:---------------|:--------------|:-------------------|:-------------|:-------------|:-----------|:---------|:-----|
 | ベースライン | 0/4 | 4 | 0 | 0 | 0 | 1 | 0 | 全4ジョブ green（基準点・[run 32218566766](https://github.com/3Da-design/tech-update-task-app-htmljs/actions/runs/32218566766) / `92442de`）。`experiment-baseline-v1` と差分ゼロ（PR 作成用の空コミットのみ）。 |
 | 更新直後 | 0/4 | 7 | 1 | 1 | 1 | 1 | 0 | 変更は `TaskRepository::getFiltered` の 1 行（`LOWER(title) LIKE ?`）のみで CI 緑（[run 32218876046](https://github.com/3Da-design/tech-update-task-app-htmljs/actions/runs/32218876046) / `5bd711f`）。既存の `title=Foo` テストはケース無視化後も通過するため fail 0（テスト・Postman 未更新）。 |
-| 修正後 | 0/4 | 12 | 2 | 18 | 1 | 1 | 1 | 全4ジョブ green（[run 32220245145](https://github.com/3Da-design/tech-update-task-app-htmljs/actions/runs/32220245145) / `c48fce6`）。API 版ケース無視テストを追加し PHPUnit 41/41。手動バグ 1 件: シナリオ MD（S0 由来）の web 版テスト `GET /tasks?title=important` は S1 に Blade タスクルートが無く 404 となるため不採用とし、API 版 1 件のみ採用した。 |
+| 修正後 | 0/4 | 12 | 2 | 18 | 1 | 1 | 0 | 全4ジョブ green（[run 32220245145](https://github.com/3Da-design/tech-update-task-app-htmljs/actions/runs/32220245145) / `c48fce6`）。API 版ケース無視テストを追加し PHPUnit 41/41。**手順書の不備（アプリ不具合ではないため手動バグに計上せず）:** シナリオ MD Step 4-1 の web 版テスト `GET /tasks?title=important` は S0（Blade）由来で、S1 には Blade タスクルートが無く 404 になる。API 版 1 件のみ採用した。 |
 
 ## フェーズ別詳細
 
