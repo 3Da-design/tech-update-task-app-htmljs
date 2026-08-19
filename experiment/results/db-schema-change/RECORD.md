@@ -24,9 +24,9 @@
 
 | フェーズ | CI (失敗/総数) | 作業時間 (分) | アプリ変更ファイル | アプリ追加行 | アプリ削除行 | コミット数 | 手動バグ | メモ |
 |:---------|:---------------|:--------------|:-------------------|:-------------|:-------------|:-----------|:---------|:-----|
-| ベースライン | 0/4 | 4 | | | | | | |
-| 更新直後 | 0/4 | 7 | | | | | | |
-| 修正後 | | 12 | | | | | | |
+| ベースライン | 0/4 | 4 | 0 | 0 | 0 | 1 | 0 | 全4ジョブ green（基準点・[run 32218566766](https://github.com/3Da-design/tech-update-task-app-htmljs/actions/runs/32218566766) / `92442de`）。`experiment-baseline-v1` と差分ゼロ（PR 作成用の空コミットのみ）。 |
+| 更新直後 | 0/4 | 7 | 1 | 1 | 1 | 1 | 0 | 変更は `TaskRepository::getFiltered` の 1 行（`LOWER(title) LIKE ?`）のみで CI 緑（[run 32218876046](https://github.com/3Da-design/tech-update-task-app-htmljs/actions/runs/32218876046) / `5bd711f`）。既存の `title=Foo` テストはケース無視化後も通過するため fail 0（テスト・Postman 未更新）。 |
+| 修正後 | 0/4 | 12 | 2 | 18 | 1 | 1 | 1 | 全4ジョブ green（[run 32220245145](https://github.com/3Da-design/tech-update-task-app-htmljs/actions/runs/32220245145) / `c48fce6`）。API 版ケース無視テストを追加し PHPUnit 41/41。手動バグ 1 件: シナリオ MD（S0 由来）の web 版テスト `GET /tasks?title=important` は S1 に Blade タスクルートが無く 404 となるため不採用とし、API 版 1 件のみ採用した。 |
 
 ## フェーズ別詳細
 
