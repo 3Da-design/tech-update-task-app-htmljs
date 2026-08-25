@@ -71,7 +71,7 @@ class TaskService
 
   /**
    * @param  array<string, mixed>  $query
-   * @return array{title?: string, status?: string, due_date_sort?: string}
+   * @return array{title?: string, status?: int, due_date_sort?: string}
    */
   private function normalizeListFilters(array $query): array
   {
@@ -84,9 +84,9 @@ class TaskService
       }
     }
 
-    if (isset($query['status']) && is_string($query['status'])) {
-      $status = trim($query['status']);
-      if ($status !== '') {
+    if (isset($query['status']) && is_numeric($query['status'])) {
+      $status = (int) $query['status'];
+      if (in_array($status, config('task.status_values'), true)) {
         $filters['status'] = $status;
       }
     }
@@ -121,6 +121,10 @@ class TaskService
         $trimmed = trim($desc);
         $data['description'] = $trimmed === '' ? null : $trimmed;
       }
+    }
+
+    if (array_key_exists('status', $data)) {
+      $data['status'] = (int) $data['status'];
     }
 
     return $data;

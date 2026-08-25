@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Collection;
 interface TaskRepositoryInterface
 {
   /**
-   * @param  array{title?: string, status?: string, due_date_sort?: string}  $filters
+   * @param  array{title?: string, status?: int, due_date_sort?: string}  $filters
    * @return Collection<int, Task>
    */
   public function getFiltered(int $userId, array $filters = []): Collection;

@@ -26,7 +26,7 @@ class UpdateTaskRequest extends FormRequest
     return [
       'title' => ['sometimes', 'required', 'string', 'max:255'],
       'description' => ['sometimes', 'nullable', 'string'],
-      'status' => ['sometimes', 'required', 'string', Rule::in(config('task.status_values'))],
+      'status' => ['sometimes', 'required', 'integer', Rule::in(config('task.status_values'))],
       'due_date' => ['sometimes', 'nullable', 'date'],
     ];
   }
