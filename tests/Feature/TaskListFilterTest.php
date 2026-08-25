@@ -68,6 +68,23 @@ class TaskListFilterTest extends TestCase
     $this->assertSame(['Foo task', 'Baz task', 'Bar task'], $titles);
   }
 
+  public function test_api_index_title_search_is_case_insensitive(): void
+  {
+    Task::query()->create([
+      'user_id' => $this->user->id,
+      'title' => 'Important task',
+      'description' => null,
+      'status' => 'todo',
+      'due_date' => null,
+    ]);
+
+    $response = $this->actingAs($this->user)->getJson('/api/tasks?title=important');
+
+    $response->assertOk();
+    $titles = collect($response->json('data'))->pluck('title')->all();
+    $this->assertSame(['Important task'], $titles);
+  }
+
   private function seedTasks(): void
   {
     Task::query()->create([

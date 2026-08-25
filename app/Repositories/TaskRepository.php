@@ -14,7 +14,7 @@ class TaskRepository implements TaskRepositoryInterface
 
     $title = $filters['title'] ?? null;
     if (is_string($title) && $title !== '') {
-      $query->where('title', 'like', '%'.$this->escapeLike($title).'%');
+      $query->whereRaw('LOWER(title) LIKE ?', ['%'.mb_strtolower($this->escapeLike($title)).'%']);
     }
 
     $status = $filters['status'] ?? null;
