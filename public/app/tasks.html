@@ -49,6 +49,26 @@
           </select>
         </div>
         <div class="app-form-field">
+          <label for="filter-priority">優先度</label>
+          <select id="filter-priority" name="priority" class="app-input">
+            <option value="">すべて</option>
+            <option value="low">low</option>
+            <option value="medium">medium</option>
+            <option value="high">high</option>
+          </select>
+        </div>
+        <div class="app-form-field">
+          <label>優先度並び替え</label>
+          <div class="app-radio-group">
+            <label class="app-radio-label">
+              <input type="radio" name="priority_sort" value="asc" checked> 昇順
+            </label>
+            <label class="app-radio-label">
+              <input type="radio" name="priority_sort" value="desc"> 降順
+            </label>
+          </div>
+        </div>
+        <div class="app-form-field">
           <label>期限並び替え</label>
           <div class="app-radio-group">
             <label class="app-radio-label">
@@ -70,12 +90,13 @@
           <tr>
             <th>タイトル</th>
             <th>ステータス</th>
+            <th>優先度</th>
             <th>期限</th>
             <th class="text-right">操作</th>
           </tr>
         </thead>
         <tbody id="task-list">
-          <tr><td colspan="4" class="empty-cell">読み込み中...</td></tr>
+          <tr><td colspan="5" class="empty-cell">読み込み中...</td></tr>
         </tbody>
       </table>
     </div>
@@ -101,6 +122,14 @@
             <option value="todo">todo</option>
             <option value="in_progress">in_progress</option>
             <option value="done">done</option>
+          </select>
+        </div>
+        <div class="app-form-field" style="margin-top:0.75rem">
+          <label for="task-priority">優先度</label>
+          <select id="task-priority" class="app-input">
+            <option value="low">low</option>
+            <option value="medium">medium</option>
+            <option value="high">high</option>
           </select>
         </div>
         <div class="app-form-field" style="margin-top:0.75rem">

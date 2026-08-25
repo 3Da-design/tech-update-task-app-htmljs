@@ -56,7 +56,8 @@ class TaskApiTest extends TestCase
 
     $response->assertCreated();
     $response->assertJsonPath('data.title', 'New Task');
-    $this->assertDatabaseHas('tasks', ['title' => 'New Task']);
+    $response->assertJsonPath('data.priority', 'medium');
+    $this->assertDatabaseHas('tasks', ['title' => 'New Task', 'priority' => 'medium']);
   }
 
   /** POST status 不正 → 422 */
@@ -97,10 +98,12 @@ class TaskApiTest extends TestCase
     $response = $this->actingAs($this->user)->putJson("/api/tasks/{$task->id}", [
       'title' => 'Updated',
       'status' => 'in_progress',
+      'priority' => 'high',
     ]);
 
     $response->assertOk();
     $response->assertJsonPath('data.title', 'Updated');
+    $response->assertJsonPath('data.priority', 'high');
   }
 
   /** PUT　存在しない ID → 404(ModelNotFoundException) */
@@ -130,5 +133,18 @@ class TaskApiTest extends TestCase
 
     $response->assertNoContent();
     $this->assertDatabaseMissing('tasks', ['id' => $task->id]);
+  }
+
+  /** POST priority 不正 → 422 */
+  public function test_store_with_invalid_priority_returns_422(): void
+  {
+    $response = $this->actingAs($this->user)->postJson('/api/tasks', [
+      'title' => 't',
+      'status' => 'todo',
+      'priority' => 'urgent',
+    ]);
+
+    $response->assertStatus(422);
+    $response->assertJsonValidationErrors('priority');
   }
 }

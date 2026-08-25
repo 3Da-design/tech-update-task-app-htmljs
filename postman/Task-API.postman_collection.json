@@ -204,6 +204,9 @@
                 "exec": [
                   "pm.test('status 201', () => pm.response.to.have.status(201));",
                   "const json = pm.response.json();",
+                  "pm.test('priority defaults to medium', () => {",
+                  "  pm.expect(json.data.priority).to.eql('medium');",
+                  "});",
                   "const id = json.data && json.data.id;",
                   "if (id) {",
                   "  pm.collectionVariables.set('taskId', String(id));",
@@ -252,7 +255,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Updated from Postman\",\n  \"status\": \"in_progress\"\n}"
+              "raw": "{\n  \"title\": \"Updated from Postman\",\n  \"status\": \"in_progress\",\n  \"priority\": \"high\"\n }"
             },
             "url": "{{baseUrl}}/api/tasks/{{taskId}}"
           },
@@ -262,7 +265,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('response has priority', () => {",
+                  "  pm.expect(pm.response.json().data.priority).to.eql('high');",
+                  "});"
                 ]
               }
             }

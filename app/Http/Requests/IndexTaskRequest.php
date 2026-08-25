@@ -20,7 +20,7 @@ class IndexTaskRequest extends FormRequest
   {
     $normalized = [];
 
-    foreach (['title', 'status', 'due_date_sort'] as $key) {
+    foreach (['title', 'status', 'priority', 'priority_sort', 'due_date_sort'] as $key) {
       if ($this->has($key) && $this->input($key) === '') {
         $normalized[$key] = null;
       }
@@ -41,6 +41,8 @@ class IndexTaskRequest extends FormRequest
     return [
       'title' => ['nullable', 'string', 'max:255'],
       'status' => ['nullable', 'string', Rule::in(config('task.status_values'))],
+      'priority' => ['nullable', 'string', Rule::in(config('task.priority_values'))],
+      'priority_sort' => ['nullable', 'string', Rule::in(['asc', 'desc'])],
       'due_date_sort' => ['nullable', 'string', Rule::in(['asc', 'desc'])],
     ];
   }

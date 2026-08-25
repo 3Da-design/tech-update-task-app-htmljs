@@ -71,7 +71,7 @@ class TaskService
 
   /**
    * @param  array<string, mixed>  $query
-   * @return array{title?: string, status?: string, due_date_sort?: string}
+   * @return array{title?: string, status?: string, priority?: string, priority_sort?: string, due_date_sort?: string}
    */
   private function normalizeListFilters(array $query): array
   {
@@ -91,6 +91,19 @@ class TaskService
       }
     }
 
+    if (isset($query['priority']) && is_string($query['priority'])) {
+      $priority = trim($query['priority']);
+      if ($priority !== '') {
+        $filters['priority'] = $priority;
+      }
+    }
+
+    if (isset($query['priority_sort']) && $query['priority_sort'] === 'desc') {
+      $filters['priority_sort'] = 'desc';
+    } elseif (isset($query['priority_sort']) && $query['priority_sort'] === 'asc') {
+      $filters['priority_sort'] = 'asc';
+    }
+
     if (isset($query['due_date_sort']) && $query['due_date_sort'] === 'desc') {
       $filters['due_date_sort'] = 'desc';
     } elseif (isset($query['due_date_sort']) && $query['due_date_sort'] === 'asc') {
@@ -106,7 +119,7 @@ class TaskService
    */
   private function normalizeTaskPayload(array $data): array
   {
-    $allowed = ['title', 'description', 'status', 'due_date'];
+    $allowed = ['title', 'description', 'status', 'priority', 'due_date'];
     $data = array_intersect_key($data, array_flip($allowed));
 
     if (array_key_exists('title', $data) && is_string($data['title'])) {
