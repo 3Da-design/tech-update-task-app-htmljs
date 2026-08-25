@@ -261,15 +261,36 @@ GIT_BACKEND_SHORTSTAT=""
 GIT_BACKEND_FILES_CHANGED=""
 GIT_BACKEND_LINES_ADDED=""
 GIT_BACKEND_LINES_DELETED=""
+# git_app（主指標）の除外パス。実験メタデータに加え、ビルド生成物も除外する。
+# S2 は Vite の出力（public/assets/*.js・public/index.html）をコミットしており、
+# これを含めると「手で書いた修正量」を測るという主指標の定義から外れ、
+# ビルド工程を持たない S1・生成物を未コミットの S0 と比較条件が揃わない。
+# 4リポで同一定義にするため、該当ファイルが無いリポジトリにも同じ除外を置く。
+GIT_APP_EXCLUDES=(
+  ':(exclude)experiment/results'
+  ':(exclude)experiment/metrics'
+  ':(exclude)public/assets'
+  ':(exclude)public/index.html'
+  # 手順書・設計ドキュメント。実装ファイルではないので数えない。
+  # 第1章 improved の「18」は docs/scenarios/*.md の混入が原因だった（MEASUREMENT-VALIDITY §3.2）。
+  ':(exclude)docs'
+  # 計測器と実験記録の機構そのもの。測定対象ではないので主指標に数えない。
+  # curl-api-smoke.sh / check-quality.sh は API 契約・品質ゲートの検証であり
+  # postman/ と同じ性格なので、あえて除外しない（仕様変更で直る余地がある）。
+  ':(exclude)scripts/collect-experiment-metrics.sh'
+  ':(exclude)scripts/generate_experiment_record.py'
+  ':(exclude)scripts/publish-experiment-results.sh'
+  ':(exclude)scripts/lib'
+)
 if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
   if [[ -n "$DIFF_REF" ]]; then
     GIT_SHORTSTAT="$(git diff --shortstat "${DIFF_REF}..HEAD" 2>/dev/null | tr -d '\n' || true)"
-    GIT_APP_SHORTSTAT="$(git diff --shortstat "${DIFF_REF}..HEAD" -- . ':(exclude)experiment/results' ':(exclude)experiment/metrics' 2>/dev/null | tr -d '\n' || true)"
+    GIT_APP_SHORTSTAT="$(git diff --shortstat "${DIFF_REF}..HEAD" -- . "${GIT_APP_EXCLUDES[@]}" 2>/dev/null | tr -d '\n' || true)"
     GIT_FRONTEND_SHORTSTAT="$(git diff --shortstat "${DIFF_REF}..HEAD" -- "${FRONTEND_PATHSPEC[@]}" 2>/dev/null | tr -d '\n' || true)"
     GIT_BACKEND_SHORTSTAT="$(git diff --shortstat "${DIFF_REF}..HEAD" -- "${BACKEND_PATHSPEC[@]}" 2>/dev/null | tr -d '\n' || true)"
   else
     GIT_SHORTSTAT="$(git diff --shortstat 2>/dev/null | tr -d '\n' || true)"
-    GIT_APP_SHORTSTAT="$(git diff --shortstat -- . ':(exclude)experiment/results' ':(exclude)experiment/metrics' 2>/dev/null | tr -d '\n' || true)"
+    GIT_APP_SHORTSTAT="$(git diff --shortstat -- . "${GIT_APP_EXCLUDES[@]}" 2>/dev/null | tr -d '\n' || true)"
     GIT_FRONTEND_SHORTSTAT="$(git diff --shortstat -- "${FRONTEND_PATHSPEC[@]}" 2>/dev/null | tr -d '\n' || true)"
     GIT_BACKEND_SHORTSTAT="$(git diff --shortstat -- "${BACKEND_PATHSPEC[@]}" 2>/dev/null | tr -d '\n' || true)"
   fi
@@ -347,7 +368,7 @@ doc = {
         "lines_added": int(os.environ.get("GIT_APP_LINES_ADDED") or 0),
         "lines_deleted": int(os.environ.get("GIT_APP_LINES_DELETED") or 0),
         "diff_shortstat": os.environ.get("GIT_APP_SHORTSTAT", ""),
-        "excludes": ["experiment/results/", "experiment/metrics/"],
+        "excludes": ["experiment/results/", "experiment/metrics/", "public/assets/", "public/index.html", "docs/", "scripts/collect-experiment-metrics.sh", "scripts/generate_experiment_record.py", "scripts/publish-experiment-results.sh", "scripts/lib/"],
     },
     "git_frontend": {
         "diff_ref": os.environ.get("DIFF_REF", "") or None,
